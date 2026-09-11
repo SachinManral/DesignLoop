@@ -2,7 +2,7 @@ import { Problem, StructuredDesignContent, FeedbackReport, CriterionResult, Muta
 import { Database } from '../db';
 import { EvaluationEngine } from '../../src/services/evaluationEngine';
 
-// Groq production model fallback chain — active high-intelligence models
+// Groq model fallback chain
 const GROQ_MODEL_CHAIN = [
   'openai/gpt-oss-120b',
   'openai/gpt-oss-20b',
@@ -19,19 +19,15 @@ const GEMINI_MODEL_CHAIN = [
   'gemini-1.5-pro'
 ];
 
-/**
- * Situational AI routing:
- *   'groq'   — low-latency real-time dialogue (sub-second responses for chat, interviewer, tutor, quiz)
- *   'gemini' — deep reasoning, architectural 8-dimension rubric evaluation, mutation analysis
- */
+// Task-based provider routing
 const TASK_ROUTING: Record<string, 'gemini' | 'groq'> = {
-  evaluateSubmission: 'gemini', // Deep architectural reasoning & rubric evaluation
-  evaluateMutation:   'gemini', // Complex requirement mutation & OCP analysis
-  askInterviewer:     'groq',   // Real-time clarification Q&A — ultra-fast latency
-  reviewAssumptions:  'groq',   // Interactive assumption checking
-  getDesignAdvice:    'groq',   // Real-time workspace co-pilot
-  askTutor:           'groq',   // Fast tutor explanations with sub-second response
-  generateQuiz:       'groq',   // Instant quiz generation
+  evaluateSubmission: 'gemini', // Detailed rubric scoring and deep reasoning
+  evaluateMutation:   'gemini', // Requirement mutation analysis
+  askInterviewer:     'groq',   // Fast response Q&A
+  reviewAssumptions:  'groq',   // Fast assumption verification
+  getDesignAdvice:    'groq',   // Workspace co-pilot
+  askTutor:           'groq',   // Real-time tutor chat
+  generateQuiz:       'groq',   // Rapid quiz generation
 };
 
 export class AiProvider {

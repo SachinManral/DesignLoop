@@ -23,14 +23,47 @@ import { BENCHMARK_PROBLEMS } from './data/seedProblems';
 import { CURRICULUM_MODULES, CURRICULUM_CHAPTERS } from './data/curriculumData';
 import { StorageService } from './services/storageService';
 import { ApiClient } from './services/apiClient';
+import { useAppRouter, RouteRegistry } from './router';
 import { Problem, Attempt, SupportedLanguage, UserSettings } from './types';
 
 export const App: React.FC = () => {
-  // Navigation & view states - defaults to home landing page
-  const [activeTab, setActiveTab] = useState<MainNavTab>('home');
-  const [learnViewMode, setLearnViewMode] = useState<'index' | 'chapter'>('index');
-  const [currentChapterId, setCurrentChapterId] = useState<string>('classes-and-objects');
+  // Problem library and attempt state
+  const [problems, setProblems] = useState<Problem[]>(BENCHMARK_PROBLEMS);
+  const [selectedProblemId, setSelectedProblemId] = useState<string>(BENCHMARK_PROBLEMS[0].id);
+  const [attempts, setAttempts] = useState<Attempt[]>(StorageService.getAttempts());
+  const [currentAttempt, setCurrentAttempt] = useState<Attempt | null>(null);
+  const [activeStep, setActiveStep] = useState<number>(1);
+  const [maxReachedStep, setMaxReachedStep] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const selectedProblem = problems.find((p) => p.id === selectedProblemId) || problems[0];
+
+  // Type-safe decoupled application router
+  const { route, navigate, navigateToChapter, navigateToPractice, navigateToTab } = useAppRouter(
+    problems,
+    selectedProblem
+  );
+
+  // Derive active view states from route contract
+  const activeTab: MainNavTab =
+    route.type === 'home'
+      ? 'home'
+      : route.type === 'learn-index' || route.type === 'learn-chapter'
+      ? 'learn'
+      : route.type === 'problems'
+      ? 'library'
+      : route.type === 'practice'
+      ? 'practice'
+      : route.type === 'progress'
+      ? 'progress'
+      : route.type === 'history'
+      ? 'history'
+      : 'home';
+
+  const learnViewMode: 'index' | 'chapter' = route.type === 'learn-chapter' ? 'chapter' : 'index';
+  const currentChapterId = route.params.chapterId || 'classes-and-objects';
+  const practiceStarted = route.type === 'practice' && Boolean(route.params.problemId);
+  const isReaderMode = activeTab === 'learn' && learnViewMode === 'chapter';
 
   // Curriculum persistence states
   const [completedChapterIds, setCompletedChapterIds] = useState<string[]>(
@@ -52,72 +85,15 @@ export const App: React.FC = () => {
   const [modalNoteTarget, setModalNoteTarget] = useState<{ id: string; title: string } | null>(null);
   const [modalUMLTarget, setModalUMLTarget] = useState<{ id: string; title: string } | null>(null);
 
-  // 7-step practice studio state
-  const [problems, setProblems] = useState<Problem[]>(BENCHMARK_PROBLEMS);
-  const [selectedProblemId, setSelectedProblemId] = useState<string>(BENCHMARK_PROBLEMS[0].id);
-  const [attempts, setAttempts] = useState<Attempt[]>(StorageService.getAttempts());
-  const [currentAttempt, setCurrentAttempt] = useState<Attempt | null>(null);
-  const [activeStep, setActiveStep] = useState<number>(1);
-  const [maxReachedStep, setMaxReachedStep] = useState<number>(1);
-  const [practiceStarted, setPracticeStarted] = useState<boolean>(false);
-
-  const selectedProblem = problems.find((p) => p.id === selectedProblemId) || problems[0];
-  const isReaderMode = activeTab === 'learn' && learnViewMode === 'chapter';
-
-  // Parse path and synchronize state
-  const applyRoute = (pathname: string) => {
-    const cleanPath = pathname.replace(/^\/+|\/+$/g, '');
-    const segments = cleanPath.split('/');
-
-    if (!cleanPath || cleanPath === 'home') {
-      setActiveTab('home');
-    } else if (segments[0] === 'learn') {
-      setActiveTab('learn');
-      if (segments[1]) {
-        setCurrentChapterId(segments[1]);
-        setLearnViewMode('chapter');
-      } else {
-        setLearnViewMode('index');
-      }
-    } else if (segments[0] === 'practice') {
-      setActiveTab('practice');
-      if (segments[1]) {
-        setSelectedProblemId(segments[1]);
-        setPracticeStarted(true);
-      } else {
-        setPracticeStarted(false);
-      }
-    } else if (segments[0] === 'library' || segments[0] === 'problems') {
-      setActiveTab('library');
-    } else if (segments[0] === 'progress') {
-      setActiveTab('progress');
-    } else if (segments[0] === 'history') {
-      setActiveTab('history');
-    } else {
-      setActiveTab('home');
-    }
-  };
-
-  // Push new URL state to browser history
-  const navigateTo = (path: string) => {
-    if (window.location.pathname !== path) {
-      window.history.pushState(null, '', path);
-    }
-    applyRoute(path);
-  };
-
-  // Handle browser back and forward navigation
+  // Synchronize route parameters with problem and step states
   useEffect(() => {
-    const handlePopState = () => {
-      applyRoute(window.location.pathname);
-    };
-
-    // Initialize route on first load
-    applyRoute(window.location.pathname);
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+    if (route.params.problemId && route.params.problemId !== selectedProblemId) {
+      setSelectedProblemId(route.params.problemId);
+    }
+    if (route.params.step && route.params.step !== activeStep) {
+      setActiveStep(route.params.step);
+    }
+  }, [route]);
 
   // Apply theme class to root
   useEffect(() => {
@@ -139,7 +115,7 @@ export const App: React.FC = () => {
       const att = StorageService.getOrCreateAttempt(selectedProblem);
       setCurrentAttempt(att);
       setAttempts(StorageService.getAttempts());
-      
+
       let highest = att.activeStep || 1;
       if (att.submissions && att.submissions.length > 0) {
         highest = Math.max(highest, 6);
@@ -148,12 +124,19 @@ export const App: React.FC = () => {
     }
   }, [selectedProblemId]);
 
-  // Centralized step change handler to keep active step and attempt progress synchronized in real time
+  // Step change handler synchronizing step and URL path
   const handleStepChange = (newStep: number) => {
     setActiveStep(newStep);
     if (newStep > maxReachedStep) {
       setMaxReachedStep(newStep);
     }
+
+    const problemSlug = selectedProblem?.slug || selectedProblem?.id;
+    if (problemSlug && practiceStarted) {
+      const newUrl = RouteRegistry.practiceUrl(problemSlug, newStep);
+      navigate(newUrl, { replace: true });
+    }
+
     if (currentAttempt) {
       const updated: Attempt = {
         ...currentAttempt,
@@ -188,22 +171,23 @@ export const App: React.FC = () => {
   };
 
   const handleSelectChapter = (chapterId: string) => {
-    navigateTo(`/learn/${chapterId}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateToChapter(chapterId);
   };
 
-  const handleNavigateToPractice = (problemId: string) => {
-    navigateTo(`/practice/${problemId}`);
-    setActiveStep(1);
-    const existing = StorageService.getAttemptForProblem(problemId);
-    let step = 1;
-    if (existing) {
-      step = existing.activeStep || 1;
+  const handleNavigateToPractice = (problemIdOrSlug: string, step?: number) => {
+    navigateToPractice(problemIdOrSlug, step);
+    const resolved = RouteRegistry.resolveProblem(problemIdOrSlug, problems);
+    setSelectedProblemId(resolved.id);
+    const existing = StorageService.getAttemptForProblem(resolved.id);
+    let initialStep = step || 1;
+    if (!step && existing) {
+      initialStep = existing.activeStep || 1;
       if (existing.submissions && existing.submissions.length > 0) {
-        step = Math.max(step, 6);
+        initialStep = Math.max(initialStep, 6);
       }
     }
-    setMaxReachedStep(step);
+    setActiveStep(initialStep);
+    setMaxReachedStep(Math.max(initialStep, existing?.activeStep || 1));
   };
 
   const handleUpdateSettings = (newSettings: Partial<UserSettings>) => {
@@ -226,15 +210,7 @@ export const App: React.FC = () => {
       {!isReaderMode && (
         <AppSidebar
           activeTab={activeTab}
-          onSelectTab={(tab) => {
-            if (tab === 'home') {
-              navigateTo('/home');
-            } else if (tab === 'learn') {
-              navigateTo('/learn');
-            } else {
-              navigateTo(`/${tab}`);
-            }
-          }}
+          onSelectTab={(tab) => navigateToTab(tab)}
         />
       )}
 
@@ -244,15 +220,7 @@ export const App: React.FC = () => {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           activeTab={activeTab}
-          onSelectTab={(tab) => {
-            if (tab === 'home') {
-              navigateTo('/home');
-            } else if (tab === 'learn') {
-              navigateTo('/learn');
-            } else {
-              navigateTo(`/${tab}`);
-            }
-          }}
+          onSelectTab={(tab) => navigateToTab(tab)}
           settings={settings}
           onUpdateSettings={handleUpdateSettings}
           onOpenSettings={() => setIsSettingsOpen(true)}
@@ -266,12 +234,7 @@ export const App: React.FC = () => {
               <HomePage
                 problems={problems}
                 attempts={attempts}
-                onNavigateToTab={(tab, path) => {
-                  if (path) navigateTo(path);
-                  else if (tab === 'home') navigateTo('/home');
-                  else if (tab === 'learn') navigateTo('/learn');
-                  else navigateTo(`/${tab}`);
-                }}
+                onNavigateToTab={(tab, path) => navigateToTab(tab, path)}
                 onSelectProblem={(pId) => handleNavigateToPractice(pId)}
               />
             </div>
@@ -293,7 +256,7 @@ export const App: React.FC = () => {
                   onSelectChapter={handleSelectChapter}
                   onOpenNotesModal={(id, title) => setModalNoteTarget({ id, title })}
                   onOpenUMLModal={(id, title) => setModalUMLTarget({ id, title })}
-                  onViewProgressTab={() => navigateTo('/progress')}
+                  onViewProgressTab={() => navigateToTab('progress')}
                 />
               ) : (
                 <ChapterReaderView
@@ -310,7 +273,7 @@ export const App: React.FC = () => {
                   onToggleStar={handleToggleStar}
                   onSaveNote={handleSaveNote}
                   onSelectLanguage={handleSelectLanguage}
-                  onBackToHome={() => navigateTo('/learn')}
+                  onBackToHome={() => navigateToTab('learn')}
                   onNavigateToPractice={handleNavigateToPractice}
                 />
               )}
@@ -326,9 +289,7 @@ export const App: React.FC = () => {
                   attempts={attempts}
                   searchQuery={searchQuery}
                   onSelectProblem={(id) => {
-                    setSelectedProblemId(id);
-                    setPracticeStarted(true);
-                    setActiveStep(1);
+                    handleNavigateToPractice(id);
                   }}
                 />
               ) : (
@@ -352,10 +313,9 @@ export const App: React.FC = () => {
                         const targetStep = maxReachedStep > 1 ? maxReachedStep : 2;
                         handleStepChange(targetStep);
                       }}
-                      onBackToProblems={() => navigateTo('/practice')}
+                      onBackToProblems={() => navigateToTab('problems')}
                       onSelectProblem={(pId) => {
-                        navigateTo(`/practice/${pId}`);
-                        setActiveStep(1);
+                        handleNavigateToPractice(pId);
                       }}
                     />
                   )}
@@ -419,7 +379,7 @@ export const App: React.FC = () => {
                       attempt={currentAttempt}
                       onUpdateDraft={handleUpdateDraft}
                       onRetryWithRevision={() => handleStepChange(4)}
-                      onViewComparison={() => navigateTo('/history')}
+                      onViewComparison={() => navigateToTab('history')}
                       onBack={() => handleStepChange(6)}
                     />
                   )}
@@ -436,8 +396,7 @@ export const App: React.FC = () => {
                 attempts={attempts}
                 searchQuery={searchQuery}
                 onSelectProblem={(id) => {
-                  navigateTo(`/practice/${id}`);
-                  setActiveStep(1);
+                  handleNavigateToPractice(id);
                 }}
               />
             </div>
@@ -450,8 +409,7 @@ export const App: React.FC = () => {
                 attempts={attempts}
                 problems={problems}
                 onSelectProblem={(pId) => {
-                  navigateTo(`/practice/${pId}`);
-                  setActiveStep(1);
+                  handleNavigateToPractice(pId);
                 }}
               />
             </div>
@@ -463,9 +421,9 @@ export const App: React.FC = () => {
               {currentAttempt ? (
                 <ImprovementLab
                   attempt={currentAttempt}
-                  onBack={() => navigateTo('/practice')}
+                  onBack={() => navigateToTab('practice')}
                   onStartNewProblem={() => {
-                    navigateTo('/practice');
+                    navigateToTab('practice');
                   }}
                 />
               ) : (
