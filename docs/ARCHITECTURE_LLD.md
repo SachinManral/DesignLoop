@@ -12,7 +12,7 @@ graph TD
         TopNav[Top Navigation Header]
         LearnView[Learn Curriculum 3-Column View]
         PracticeView[Problem Arena & 7-Step Studio]
-        ProgressView[Skill Radar & Certificate View]
+        ProgressView[Progress & Telemetry Analytics View]
         Modals[Notes Modal, Settings Drawer, AI Tutor Drawer]
     end
 
@@ -95,8 +95,6 @@ export interface CurriculumChapter {
   readTimeMinutes: number;
   lastUpdated: string;
   summary: string;
-  audioDurationSeconds?: number;
-  audioScript?: string;
   sections: ChapterSection[];
   umlCard?: UMLClassCardData;
   codeSnippets: {
@@ -213,7 +211,6 @@ classDiagram
         +problemAttempts: Record~ProblemId, Attempt[]~
         +activeDrafts: Record~ProblemId, DraftState~
         +bookmarkedChapters: string[]
-        +communityRatings: Record~ChapterId, number~
     }
 
     class ChapterStatus {

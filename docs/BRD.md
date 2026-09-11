@@ -12,9 +12,9 @@ Engineers preparing for Low-Level Design (LLD) interviews face three consistent 
 
 **DesignLoop** addresses these gaps through an integrated approach:
 
-1. **Theory Hub** — A 15-module curriculum (137 chapters) with UML cards, 5-language code studios, audio playback, and inline quizzes.
+1. **Theory Hub** — A 15-module curriculum with UML cards, 5-language code studios, real-world case studies, and inline quizzes.
 2. **Practice Arena** — 35+ domain problems across 9 industry verticals with real company tags, live Mermaid diagram modeling, deterministic structural checks, dual-AI rubric scoring, and mutation stress-tests.
-3. **Skill Mastery** — Clear visualization of architectural proficiency through radar charts and verified completion certificates.
+3. **Skill Mastery** — Clear visualization of architectural proficiency through 8-dimension rubric telemetry, score timelines, and historical progression.
 
 ## User Personas
 

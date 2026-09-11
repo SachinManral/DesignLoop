@@ -12,13 +12,12 @@ flowchart TD
     end
 
     subgraph LearnTrack ["Track 1: Theory & Curriculum"]
-        L_Sidebar["Curriculum Sidebar (15 Modules, 137 Chapters)"]
+        L_Sidebar["Curriculum Sidebar (15 Modules, 80+ Chapters)"]
         L_Reader["Interactive Chapter Reader"]
-        L_Audio["Audio Chapter Player (TTS Waveform)"]
         L_UML["Visual UML Blueprint Cards"]
         L_Code["5-Language Code Studio (Java, Python, C++, TS, Go)"]
         L_CaseStudy["Real-World Case Studies"]
-        L_Interactivity["Inline Quizzes & Mini Exercises"]
+        L_Interactivity["Inline Quizzes & Knowledge Checks"]
         L_RightTOC["Sticky TOC & Reading Progress"]
         L_Dock["Bottom Action Dock (Prev, Notes, Star, Complete, Ask AI, Next)"]
     end
@@ -37,7 +36,7 @@ flowchart TD
     subgraph CoreServices ["Shared Platform Services"]
         StateService["LocalStorage & State Persistence Engine"]
         AIRouter["Dual AI Provider Router (Gemini 2.5 Flash + Groq Llama 3.3)"]
-        ProgressAggregator["Skill Radar & Certificate Generation"]
+        ProgressAggregator["Progress Tracking & Rubric Dimension Telemetry"]
     end
 
     GlobalPlatform --> LearnTrack
@@ -53,19 +52,18 @@ flowchart TD
 ### Learn Experience
 
 1. **Curriculum Sidebar (Left, 280px)**
-   - Overall course completion header: `0% Certificate (0/137)`.
+   - Overall course completion header with module fraction.
    - Real-time chapter search.
    - 15 collapsible module accordions with completion counters.
    - Visual indicators for active, completed, starred, and quiz-type chapters.
 
 2. **Chapter Reader (Center Canvas)**
    - Priority badge, read time estimate, and last updated timestamp.
-   - Audio bar with simulated TTS waveform and speed controls (1x, 1.25x, 1.5x, 2x).
    - Markdown content with callout boxes, definitions, and analogies.
    - UML Class Blueprint Cards with access modifiers, fields, and method signatures.
    - Multi-language Code Studio: Java, Python, C++, TypeScript, Go — with line numbers, copy-to-clipboard, and simulated output console.
    - Real-world case study with trade-off analysis.
-   - Community star rating and discussion section.
+   - Inline quizzes and interactive knowledge checks.
 
 3. **Sticky TOC & Progress (Right, 240px)**
    - `On this page` section navigator with scroll-position highlighting.
@@ -76,7 +74,7 @@ flowchart TD
    - `< Previous Chapter` / `Next Chapter >` navigation.
    - `Notes` — persistent per-chapter markdown notes modal.
    - `Star` — bookmark chapters for quick revision.
-   - `Mark as Complete` — updates module and certificate progress.
+   - `Mark as Complete` — updates module progress and syllabus tracking.
    - `Ask AI` — slide-out AI tutor drawer pre-populated with chapter context.
    - `Font Size (Aa)` — typography scaling.
 

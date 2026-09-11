@@ -14,18 +14,17 @@ graph TD
         NavLearn["Learn (Curriculum)"]
         NavPractice["Practice (Problem Arena)"]
         NavLibrary["Library (Resources & Cheatsheets)"]
-        NavProgress["My Progress (Radar & Certificates)"]
+        NavProgress["My Progress (Score Timeline & Analytics)"]
         NavTheme["Theme Switcher (Dark/Light)"]
     end
 
     subgraph LearnModule ["Module 1: Theory & Curriculum"]
-        CurriculumNav["Curriculum Sidebar (137 Chapters, 15 Modules)"]
+        CurriculumNav["Curriculum Sidebar (15 Modules, 80+ Chapters)"]
         ReaderEngine["Chapter Reader Canvas"]
-        AudioSimulator["Audio Chapter Player (TTS Waveform)"]
         UMLRenderer["Interactive UML Blueprint Cards"]
         CodeRunner["5-Language Code Studio (Java, Python, C++, TS, Go)"]
         InlineQuiz["Inline Quizzes & Mini-Exercises"]
-        CommunityDrawer["Discussion & Rating Drawer"]
+        NotesDrawer["Chapter Notes & Bookmarking"]
         AIAssistant["Ask AI Drawer (Groq + Gemini)"]
     end
 
@@ -46,7 +45,7 @@ graph TD
         StorageEngine["Unified LocalStorage & Session Engine"]
         AiProvider["Dual AI Provider Router (Gemini 2.5 Flash + Groq Llama 3.3)"]
         EvalEngine["Deterministic (L1/L2) & LLM Rubric Engine (L3)"]
-        ProgressAggregator["Skill Radar & Certificate Progress Aggregator"]
+        ProgressAggregator["Rubric Telemetry & Progress Tracker"]
     end
 
     GlobalHeader --> LearnModule
@@ -70,7 +69,7 @@ gantt
     Curriculum Sidebar & 15-Module Navigation   :p2_1, 2026-09-13, 3d
     Chapter Reader Canvas & Typography           :p2_2, 2026-09-14, 3d
     5-Language Code Studio & Output Console      :p2_3, 2026-09-16, 2d
-    UML Blueprint Cards & Audio Waveform Player  :p2_4, 2026-09-17, 2d
+    UML Blueprint Cards & Interactive Elements   :p2_4, 2026-09-17, 2d
     section Phase 3: Practice Studio
     9-Domain Catalog & Company Badging           :p3_1, 2026-09-19, 3d
     7-Step Studio UX & Mermaid Live Render       :p3_2, 2026-09-21, 3d
@@ -80,9 +79,9 @@ gantt
     Ask AI Tutor & Inline Quizzes                :p4_2, 2026-09-27, 3d
     8-Dimension Rubric Scorecard Engine          :p4_3, 2026-09-29, 3d
     Mutation Stress-Test & OCP Defense           :p4_4, 2026-10-01, 2d
-    section Phase 5: Analytics, Notes & Certs
-    Notes Modal, Community Ratings & Discussion  :p5_1, 2026-10-03, 2d
-    Skill Radar & Verified Certificate Export    :p5_2, 2026-10-05, 3d
+    section Phase 5: Analytics, Notes & Telemetry
+    Notes Modal, Bookmark Revision System        :p5_1, 2026-10-03, 2d
+    Progress Score Timeline & Telemetry          :p5_2, 2026-10-05, 3d
     Responsive QA & E2E Validation               :p5_3, 2026-10-07, 3d
 ```
 
@@ -93,9 +92,9 @@ gantt
 ### Learn Mode (3 Columns + Top Nav + Bottom Dock)
 
 1. **Top Navigation (`TopNav.tsx`)** — Brand logo, primary tabs (Learn, Practice, Library, Progress), theme toggle, user profile badge.
-2. **Left Column (`CurriculumSidebar.tsx`)** — Progress ring (`0/137`), chapter search, 15 module accordions with badge counters, chapter status indicators (unread, active, completed, starred, quiz).
-3. **Center Column (`ChapterReader.tsx`)** — Priority badge, read time, last updated; audio bar with waveform; markdown reader; UML Blueprint Cards; 5-language Code Studio with simulated output; real-world case study; community rating and comments.
-4. **Right Column (`ChapterTOC.tsx`)** — `On this page` heading index with active scroll spy; reading progress indicator; Discord and resources widget.
+2. **Left Column (`CurriculumSidebar.tsx`)** — Progress counter, chapter search, 15 module accordions with badge counters, chapter status indicators (unread, active, completed, starred, quiz).
+3. **Center Column (`ChapterReader.tsx`)** — Priority badge, read time, last updated; markdown reader; UML Blueprint Cards; 5-language Code Studio with simulated output; real-world case study; inline quizzes.
+4. **Right Column (`ChapterTOC.tsx`)** — `On this page` heading index with active scroll spy; reading progress indicator; resources widget.
 5. **Bottom Dock (`BottomActionBar.tsx`)** — Previous/Next chapter, Notes modal, Star/Bookmark, Mark Complete, Ask AI drawer, Font Size toggle.
 
 ---

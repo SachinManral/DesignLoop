@@ -6,10 +6,10 @@ This document outlines the sprint structure, user stories, acceptance criteria, 
 flowchart TD
     subgraph Sprints ["Agile Sprint Lifecycle"]
         S1["Sprint 1: Architecture, Documentation & Design System<br/>PRD, Syllabus Spec, Theme Tokens, Layout Wireframes"]
-        S2["Sprint 2: Learn Mode Engine & Chapter Reader<br/>15-Module Syllabus, 3-Column Layout, 5-Language Studio, UML Cards, Audio Bar"]
+        S2["Sprint 2: Learn Mode Engine & Chapter Reader<br/>15-Module Syllabus, 3-Column Layout, 5-Language Studio, UML Cards, Quizzes"]
         S3["Sprint 3: Practice Studio & Problem Arena<br/>9-Domain Catalog, Problem Briefing, 7-Step Modeler, Mermaid Renderer"]
         S4["Sprint 4: Dual-AI Evaluation & Quizzes<br/>Groq + Gemini Router, Ask AI Tutor, 8-Dimension Rubric Scorecard, Mutation Defense"]
-        S5["Sprint 5: Analytics, Notes, Community & Certificates<br/>Chapter Notes, Ratings, Skill Radar, Certificate Generator"]
+        S5["Sprint 5: Analytics, Notes & Telemetry<br/>Chapter Notes, Bookmark System, Rubric Dimension Telemetry, Score Timeline"]
     end
     S1 --> S2 --> S3 --> S4 --> S5
 ```
@@ -21,10 +21,10 @@ flowchart TD
 | Epic | Name | Scope | Points |
 | :--- | :--- | :--- | :---: |
 | EPIC-01 | Architecture, Docs & Design Tokens | PRD, Curriculum Syllabus, Design Tokens, Architecture Spec | 8 |
-| EPIC-02 | Learn Track | 15-Module Sidebar, Chapter Reader, UML Cards, 5-Language Studio, Audio Waveform | 21 |
+| EPIC-02 | Learn Track | 15-Module Sidebar, Chapter Reader, UML Cards, 5-Language Studio, Inline Quizzes | 21 |
 | EPIC-03 | Practice Arena & 7-Step Studio | 9-Domain Catalog, Problem Briefing, 7-Step Studio, Fast-Fail Checks | 21 |
 | EPIC-04 | AI Orchestration & Evaluator | Dual-LLM Router, Ask AI Tutor, 8-Dimension Rubric, Mutation Engine | 13 |
-| EPIC-05 | Community, Notes & Progress | Chapter Notes, Star Ratings, Skill Radar, Certificate Export | 13 |
+| EPIC-05 | Notes, Telemetry & Progress | Chapter Notes, Bookmark Revision, Rubric Dimension Telemetry, Score Timeline | 13 |
 
 ---
 
@@ -34,12 +34,12 @@ flowchart TD
 
 #### US-201: Collapsible Syllabus Sidebar
 - **As a** learner,
-- **I want to** navigate through 15 organized modules and 137 chapters with instant search and completion tracking,
-- **So that** I can monitor my progress toward certification.
+- **I want to** navigate through 15 organized modules and 80+ chapters with instant search and completion tracking,
+- **So that** I can monitor my syllabus progression.
 - **Acceptance Criteria:**
   - *Given* I am on the Learn page,
   - *When* I view the left sidebar,
-  - *Then* I see `0% Certificate (0/137)`, 15 collapsible modules with completion badges, and a working search filter.
+  - *Then* I see syllabus progress counter, 15 collapsible modules with completion badges, and a working search filter.
 
 #### US-202: 5-Language Code Studio with Simulated Output
 - **As a** developer preparing in my language of choice,
@@ -50,14 +50,14 @@ flowchart TD
   - *When* I click a language tab,
   - *Then* the syntax-highlighted code updates instantly with line numbers, a copy button, and realistic stdout output.
 
-#### US-203: Audio Chapter Player Bar
-- **As a** developer who learns through audio,
-- **I want to** listen to a chapter overview with waveform visualization and speed controls,
-- **So that** I can absorb concepts on the go.
+#### US-203: Interactive UML Blueprint Cards
+- **As a** developer learning visual object modeling,
+- **I want to** inspect class attribute visibility, interface contracts, and method signatures,
+- **So that** I can bridge theoretical concepts with concrete UML models.
 - **Acceptance Criteria:**
-  - *Given* a chapter with an audio script,
-  - *When* I press Play,
-  - *Then* the waveform animates, progress updates, and speed toggles between 1x, 1.25x, 1.5x, and 2x.
+  - *Given* a chapter with structural design elements,
+  - *When* I view the UML Blueprint section,
+  - *Then* I see formatted cards with stereotypes, typed attributes, and access-modified method signatures.
 
 ---
 

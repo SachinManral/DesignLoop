@@ -33,7 +33,7 @@ Candidates solve problems through a structured interview workflow:
 
 ### 3. Theory Curriculum
 - 80+ core chapters covering Object-Oriented Programming, SOLID Principles, UML, and 22 GoF Design Patterns.
-- 3-column chapter reader with collapsible syllabus navigation, audio companion, UML Blueprint cards, and multi-language code snippets.
+- 3-column chapter reader with collapsible syllabus navigation, UML Blueprint cards, multi-language code snippets, inline quizzes, and real-time AI tutor assistance.
 
 ### 4. Progress & Analytics
 - Real-time tracking of problem attempts, rubric dimension scores, and concept mastery with zero hardcoded mock data.

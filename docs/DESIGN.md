@@ -50,18 +50,17 @@ The platform uses a sleek, high-contrast developer aesthetic:
 ### B. Chapter Reader (3-Column Layout)
 
 1. **Left Sidebar (280px)**:
-   - Course progress header: `0% Certificate (0/80)`
+   - Course progress header with module completion fraction
    - Chapter search input
    - Collapsible modules with completion fraction badges and active chapter highlighter
 
 2. **Main Chapter Canvas (Center)**:
    - Priority badge, read time, and last updated timestamp
-   - Audio preview bar with waveform and playback speed controls
    - Markdown reader with callouts and bulleted takeaways
    - UML Class Diagram cards (class name, visibility, attributes, methods)
    - Code Studio with 5-language tabs, copy button, line numbers, and simulated output console
    - Practical real-world scenario breakdown
-   - Community rating and discussion comments
+   - Inline quizzes and interactive knowledge checks
 
 3. **Right Sidebar (240px)**:
    - Sticky `On this page` table of contents with active scroll highlighting
