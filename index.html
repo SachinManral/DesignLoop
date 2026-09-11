@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DesignLoop — Practice LLD. Think Deeper.</title>
+    <meta name="description" content="Evidence-grounded Low-Level Design (LLD) practice platform that evaluates architectural reasoning, responsibility boundaries, and requirement change resilience." />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <!-- Immediate synchronous theme initialization to prevent flash on reload -->
+    <script>
+      (function () {
+        try {
+          var data = localStorage.getItem('designloop_user_settings_v1');
+          var theme = 'dark';
+          if (data) {
+            var parsed = JSON.parse(data);
+            if (parsed && parsed.theme) {
+              theme = parsed.theme;
+            }
+          }
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
