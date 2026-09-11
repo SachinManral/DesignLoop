@@ -838,39 +838,20 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ attempts: initialAtt
                   </div>
                   <div className="history-item-actions">
                     {latestActivity ? (
-                      <span 
-                        style={{
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          padding: '2px 8px',
-                          borderRadius: '99px',
-                          background: latestActivity.score >= 75 ? '#ecfdf5' : latestActivity.score >= 55 ? '#eff6ff' : '#fef2f2',
-                          color: latestActivity.score >= 75 ? '#059669' : latestActivity.score >= 55 ? '#2563eb' : '#dc2626',
-                          border: `1px solid ${latestActivity.score >= 75 ? '#a7f3d0' : latestActivity.score >= 55 ? '#bfdbfe' : '#fecaca'}`
-                        }}
-                      >
+                      <span className={`history-score-badge ${latestActivity.score >= 75 ? 'high' : latestActivity.score >= 55 ? 'mid' : 'low'}`}>
                         {latestActivity.score}%
                       </span>
                     ) : (
-                      <span 
-                        style={{
-                          fontSize: '0.68rem',
-                          fontWeight: 600,
-                          padding: '2px 7px',
-                          borderRadius: '99px',
-                          background: 'var(--bg-tertiary, #f1f5f9)',
-                          color: 'var(--text-muted)'
-                        }}
-                      >
+                      <span className="history-draft-badge">
                         Draft
                       </span>
                     )}
                     <button 
-                      className="btn-secondary" 
-                      style={{ padding: '4px 10px', fontSize: '0.72rem' }}
+                      className="history-action-btn" 
                       onClick={() => onSelectProblem(attempt.problemId)}
                     >
-                      {isEvaluated ? 'Review' : 'Open'}
+                      <span>{isEvaluated ? 'Review' : 'Open'}</span>
+                      {isEvaluated ? <ChevronRight size={13} /> : <ArrowRight size={13} />}
                     </button>
                   </div>
                 </div>
