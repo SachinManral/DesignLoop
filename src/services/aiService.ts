@@ -3,16 +3,18 @@ import { StorageService } from './storageService';
 
 
 const GROQ_MODELS = [
+  'openai/gpt-oss-120b',
   'openai/gpt-oss-20b',
-  'groq/compound-mini',
+  'qwen/qwen3.8-27b',
   'qwen/qwen3.6-27b',
-  'qwen/qwen3.8-27b'
+  'groq/compound-mini'
 ];
 
 const GEMINI_MODELS = [
-  'gemini-3.6-flash',
-  'gemini-3.7-flash',
-  'gemini-3.8-flash'
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro'
 ];
 
 export interface TutorMessage {
@@ -37,35 +39,46 @@ export class AiService {
     if (userSettings?.groqApiKey && userSettings.groqApiKey.trim()) {
       return userSettings.groqApiKey.trim();
     }
-    return (import.meta as any).env?.VITE_GROQ_API_KEY || '';
+    return '';
   }
 
   /**
-   * Get active Gemini API Key (User settings > Env variable > Seeded fallback)
+   * Get active Gemini API Key (User settings > Seeded fallback)
    */
   public static getGeminiKey(settings?: UserSettings): string {
     const userSettings = settings || StorageService.getUserSettings();
     if (userSettings?.geminiApiKey && userSettings.geminiApiKey.trim()) {
       return userSettings.geminiApiKey.trim();
     }
-    return (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
+    return '';
   }
 
   /**
    * Formats the system prompt strictly enforcing crisp, simple-worded, beginner-friendly explanations.
    */
   private static buildSystemPrompt(contextTitle: string, contextSummary?: string): string {
-    return `You are the expert, professional AI Software Architect Tutor for CipherSchool's Low-Level Design (LLD) Platform.
-Current Learning Context: "${contextTitle}"
-${contextSummary ? `Context Summary: ${contextSummary}` : ''}
+    return `You are an expert, friendly AI Software Architect Tutor for CipherSchool.
+Current Learning Topic: "${contextTitle}"
+${contextSummary ? `Topic Summary: ${contextSummary}` : ''}
 
-CRITICAL RESPONSE RULES:
-1. PROFESSIONAL & DIRECT: Maintain an objective, professional engineering tone. Do NOT use emojis anywhere in your response.
-2. SIMPLE & CONCISE: Get straight to the point in 2 to 4 short bullet points or brief paragraphs. Avoid unnecessary academic jargon.
-3. CLEAR MENTAL MODEL: Use a single, practical 1-sentence real-world analogy to anchor abstract concepts.
-4. CLEAN CODE SNIPPETS (IF RELEVANT): Provide minimal 3 to 6 line code examples with clean, meaningful comments explaining the architectural intent.
-5. TAILORED TO USER INTENT: Answer the exact question asked without tangential padding.
-6. FORMATTING: Use Markdown with bolding for key concepts and backticks for methods/types.`;
+INTENT-AWARE RESPONSE GUIDELINES:
+1. **GREETINGS & CASUAL HELLOS** (e.g. "hi", "hey", "hello", "good morning"):
+   - Respond naturally and warmly in 1 to 2 short sentences.
+   - Example: "Hey! Ready to master **${contextTitle}**? Ask me anything about how it works, real-world examples, or code patterns!"
+   - NEVER dump a full lecture or unsolicited code on a simple greeting.
+
+2. **CONCEPTUAL EXPLANATIONS & SUMMARIES** (e.g. "summarize this lecture", "explain simply", "what is this", "how does it work"):
+   - Give a rich, high-value learning explanation:
+     * **Core Intuition**: What it is and why it matters in real systems (1-2 crisp sentences).
+     * **Real-World Analogy**: A practical real-world mental model.
+     * **Clean Code Snippet**: A concise 4-8 line Java or TypeScript code snippet in \`\`\`java or \`\`\`typescript with clean comments.
+     * **Architectural Rule of Thumb**: 1 key design principle or pitfall to avoid.
+
+3. **DIRECT & SPECIFIC QUESTIONS** (e.g. "show code", "give analogy", "why use interfaces"):
+   - Directly answer the exact query with high technical depth. Include code blocks with \`\`\`java or \`\`\`typescript whenever explaining code.
+
+4. **OFF-TOPIC QUESTIONS**:
+   - Give a brief 1-sentence answer, then seamlessly guide the conversation back to "${contextTitle}".`;
   }
 
   /**
@@ -94,9 +107,19 @@ CRITICAL RESPONSE RULES:
 
     for (const model of modelsToTry) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4500);
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
       try {
+        const payload: any = {
+          model,
+          messages,
+          temperature: 0.2,
+          max_tokens: 1024,
+        };
+        if (asJson) {
+          payload.response_format = { type: 'json_object' };
+        }
+
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           signal: controller.signal,
@@ -104,13 +127,7 @@ CRITICAL RESPONSE RULES:
             'Content-Type': 'application/json',
             Authorization: `Bearer ${key}`,
           },
-          body: JSON.stringify({
-            model,
-            messages,
-            temperature: 0.2,
-            max_tokens: 500,
-            ...(asJson ? { response_format: { type: 'json_object' } } : {}),
-          }),
+          body: JSON.stringify(payload),
         });
         clearTimeout(timeoutId);
 
@@ -207,6 +224,29 @@ CRITICAL RESPONSE RULES:
    * Ask the AI Tutor a question with full conversation history and smart provider routing.
    */
   public static async askTutor(params: AskTutorParams): Promise<string> {
+    // 1. First try server endpoint (which reads GROQ_API_KEY and GEMINI_API_KEY from .env securely)
+    try {
+      const res = await fetch('/api/ai/ask-tutor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contextTitle: params.contextTitle,
+          contextSummary: params.contextSummary,
+          question: params.question,
+          history: params.history
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.answer) {
+          return data.answer;
+        }
+      }
+    } catch (serverErr) {
+      console.warn('[AiService] Server /api/ai/ask-tutor unavailable, trying direct client API call:', serverErr);
+    }
+
+    // 2. Direct browser fallback if running without backend server
     const settings = params.settings || StorageService.getUserSettings();
     const systemPrompt = this.buildSystemPrompt(params.contextTitle, params.contextSummary);
 
@@ -222,7 +262,7 @@ CRITICAL RESPONSE RULES:
 
     const preferredProvider = settings?.aiProvider || 'groq';
 
-    // 1. Fast sub-second Groq provider first
+    // Fast sub-second Groq provider first
     if (preferredProvider === 'groq') {
       try {
         return await this.callGroq(fullMessages, settings?.groqModel, this.getGroqKey(settings));
@@ -267,6 +307,33 @@ CRITICAL RESPONSE RULES:
   }> {
     const { contextTitle, questionNumber, previousQuestions = [], settings } = params;
 
+    // 1. Try server endpoint first
+    try {
+      const res = await fetch('/api/ai/generate-quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contextTitle,
+          questionNumber,
+          previousQuestions
+        })
+      });
+      if (res.ok) {
+        const parsed = await res.json();
+        if (parsed.questionText && Array.isArray(parsed.options) && parsed.correctAnswer) {
+          return {
+            questionNumber,
+            questionText: parsed.questionText,
+            options: parsed.options,
+            correctAnswer: String(parsed.correctAnswer).toUpperCase(),
+            explanation: parsed.explanation || 'Great job! That is the correct concept.',
+          };
+        }
+      }
+    } catch {
+      // Continue to client-side generation
+    }
+
     const topicAspects = [
       'Core Definition & Intuition',
       'Real-world Analogy & Purpose',
@@ -284,7 +351,7 @@ CRITICAL RESPONSE RULES:
 
     const prompt = `You are creating Question ${questionNumber} of 10 for an interactive architecture revision quiz on "${contextTitle}".
 Aspect focus for this question: "${aspectFocus}".
-${previousQuestions.length > 0 ? `Already covered questions:\n${previousQuestions.map((q, i) => `- ${q}`).join('\n')}` : ''}
+${previousQuestions.length > 0 ? `Already covered questions:\n${previousQuestions.map((q) => `- ${q}`).join('\n')}` : ''}
 
 Generate a clear, high-quality, practical multiple choice question with 4 options (A, B, C, D).
 Do NOT use emojis anywhere in your output.
@@ -358,3 +425,4 @@ Return STRICT JSON with no markdown wrapping:
     };
   }
 }
+

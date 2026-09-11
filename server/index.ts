@@ -280,16 +280,30 @@ app.post('/api/ai/evaluate-mutation', async (req, res) => {
 });
 
 app.post('/api/ai/ask-tutor', async (req, res) => {
-  const { contextTitle, question, contextSummary } = req.body;
+  const { contextTitle, question, contextSummary, history } = req.body;
   if (!contextTitle || !question) {
     return res.status(400).json({ error: 'contextTitle and question are required' });
   }
 
   try {
-    const result = await AiProvider.askTutor(contextTitle, question, contextSummary);
+    const result = await AiProvider.askTutor(contextTitle, question, contextSummary, history);
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'AI Tutor failed' });
+  }
+});
+
+app.post('/api/ai/generate-quiz', async (req, res) => {
+  const { contextTitle, questionNumber, previousQuestions } = req.body;
+  if (!contextTitle) {
+    return res.status(400).json({ error: 'contextTitle is required' });
+  }
+
+  try {
+    const result = await AiProvider.generateQuizQuestion(contextTitle, questionNumber || 1, previousQuestions || []);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'AI Quiz generator failed' });
   }
 });
 
@@ -343,7 +357,7 @@ app.post('/api/settings', (req, res) => {
 // Serve the built Vite frontend in production
 const distPath = path.join(__dirname, '../dist');
 app.use(express.static(distPath));
-app.get('*', (_req, res) => {
+app.use((_req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 

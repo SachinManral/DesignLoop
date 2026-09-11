@@ -13,23 +13,25 @@ const GROQ_MODEL_CHAIN = [
 
 // Gemini model fallback chain
 const GEMINI_MODEL_CHAIN = [
-  'gemini-3.6-flash',
-  'gemini-3.7-flash',
-  'gemini-3.8-flash'
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro'
 ];
 
 /**
  * Situational AI routing:
- *   'groq'   — low-latency real-time dialogue and fast structured evaluations
- *   'gemini' — deep reasoning, architectural evaluation
+ *   'groq'   — low-latency real-time dialogue (sub-second responses for chat, interviewer, tutor, quiz)
+ *   'gemini' — deep reasoning, architectural 8-dimension rubric evaluation, mutation analysis
  */
 const TASK_ROUTING: Record<string, 'gemini' | 'groq'> = {
-  evaluateSubmission: 'groq',   // Fast, reliable structured 8-dimension rubric
-  evaluateMutation:   'groq',   // requirement mutation reasoning
-  askInterviewer:     'groq',   // real-time clarification Q&A — ultra-fast latency
-  reviewAssumptions:  'groq',   // interactive assumption checking
-  getDesignAdvice:    'groq',   // real-time workspace co-pilot
-  askTutor:           'groq',   // fast tutor explanations
+  evaluateSubmission: 'gemini', // Deep architectural reasoning & rubric evaluation
+  evaluateMutation:   'gemini', // Complex requirement mutation & OCP analysis
+  askInterviewer:     'groq',   // Real-time clarification Q&A — ultra-fast latency
+  reviewAssumptions:  'groq',   // Interactive assumption checking
+  getDesignAdvice:    'groq',   // Real-time workspace co-pilot
+  askTutor:           'groq',   // Fast tutor explanations with sub-second response
+  generateQuiz:       'groq',   // Instant quiz generation
 };
 
 export class AiProvider {
@@ -50,15 +52,14 @@ export class AiProvider {
     return process.env.GROQ_API_KEY || '';
   }
 
-
-
   /**
    * Call Gemini REST API with model fallback chain.
    */
   private static async callGemini(
     messages: Array<{ role: string; content: string }>,
     temperature: number,
-    context: string
+    context: string,
+    jsonMode = true
   ): Promise<string> {
     const key = this.geminiKey;
     if (!key) throw new Error('No Gemini API key configured');
@@ -69,7 +70,7 @@ export class AiProvider {
       ...(systemMsg
         ? [
             { role: 'user', parts: [{ text: systemMsg.content }] },
-            { role: 'model', parts: [{ text: 'Understood. I will follow these instructions and output strict JSON.' }] }
+            { role: 'model', parts: [{ text: jsonMode ? 'Understood. I will follow these instructions and output strict JSON.' : 'Understood. I will follow these instructions.' }] }
           ]
         : []),
       ...userMsgs.map((m) => ({
@@ -82,16 +83,20 @@ export class AiProvider {
       try {
         console.log(`[AI] [${context}] → Gemini (${model})`);
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+        const genConfig: any = {
+          temperature,
+          maxOutputTokens: 8192
+        };
+        if (jsonMode) {
+          genConfig.responseMimeType = 'application/json';
+        }
+
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: geminiContents,
-            generationConfig: {
-              temperature,
-              maxOutputTokens: 8192,
-              responseMimeType: 'application/json'
-            }
+            generationConfig: genConfig
           })
         });
 
@@ -126,7 +131,8 @@ export class AiProvider {
     messages: Array<{ role: string; content: string }>,
     temperature: number,
     context: string,
-    preferredModel?: string
+    preferredModel?: string,
+    jsonMode = true
   ): Promise<string> {
     const key = this.groqKey;
     if (!key) throw new Error('No Groq API key configured');
@@ -138,16 +144,20 @@ export class AiProvider {
     for (const model of modelsToTry) {
       try {
         console.log(`[AI] [${context}] → Groq (${model})`);
+        const payload: any = {
+          model,
+          messages,
+          temperature,
+          max_tokens: 4096
+        };
+        if (jsonMode) {
+          payload.response_format = { type: 'json_object' };
+        }
+
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-          body: JSON.stringify({
-            model,
-            messages,
-            response_format: { type: 'json_object' },
-            temperature,
-            max_tokens: 4096
-          })
+          body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
@@ -174,14 +184,15 @@ export class AiProvider {
   }
 
   /**
-   * Smart router — picks primary provider based on task, falls back to the other.
+   * Smart situational router — picks primary provider based on task, falls back to the other.
    * Tasks requiring deep reasoning use Gemini first.
    * Tasks requiring low latency use Groq first.
    */
   private static async callWithRouter(
     messages: Array<{ role: string; content: string }>,
     temperature: number,
-    taskKey: string
+    taskKey: string,
+    jsonMode = true
   ): Promise<string> {
     const primary = TASK_ROUTING[taskKey] ?? 'groq';
     const secondary = primary === 'gemini' ? 'groq' : 'gemini';
@@ -190,18 +201,18 @@ export class AiProvider {
 
     // Try primary
     if (primary === 'gemini' && hasGemini) {
-      try { return await this.callGemini(messages, temperature, taskKey); }
+      try { return await this.callGemini(messages, temperature, taskKey, jsonMode); }
       catch (e: any) { console.warn(`[AI] [${taskKey}] Gemini primary failed: ${e.message}. Trying Groq fallback.`); }
     } else if (primary === 'groq' && hasGroq) {
-      try { return await this.callGroq(messages, temperature, taskKey); }
+      try { return await this.callGroq(messages, temperature, taskKey, undefined, jsonMode); }
       catch (e: any) { console.warn(`[AI] [${taskKey}] Groq primary failed: ${e.message}. Trying Gemini fallback.`); }
     }
 
     // Try secondary fallback
     if (secondary === 'gemini' && hasGemini) {
-      return await this.callGemini(messages, temperature, `${taskKey}[fallback]`);
+      return await this.callGemini(messages, temperature, `${taskKey}[fallback]`, jsonMode);
     } else if (secondary === 'groq' && hasGroq) {
-      return await this.callGroq(messages, temperature, `${taskKey}[fallback]`);
+      return await this.callGroq(messages, temperature, `${taskKey}[fallback]`, undefined, jsonMode);
     }
 
     throw new Error(`[AI] No provider available for task: ${taskKey}`);
@@ -211,9 +222,10 @@ export class AiProvider {
   private static async callWithFallback(
     messages: Array<{ role: string; content: string }>,
     temperature: number,
-    context: string
+    context: string,
+    jsonMode = true
   ): Promise<string> {
-    return this.callWithRouter(messages, temperature, context);
+    return this.callWithRouter(messages, temperature, context, jsonMode);
   }
 
   /** Helper to safely parse JSON from raw AI responses */
@@ -561,29 +573,56 @@ Return STRICT JSON:
   /**
    * 6. Live AI Tutor for Chapters & Concepts
    */
-  public static async askTutor(contextTitle: string, question: string, contextSummary?: string): Promise<{ answer: string }> {
+  public static async askTutor(
+    contextTitle: string,
+    question: string,
+    contextSummary?: string,
+    history?: Array<{ role: string; content: string }>
+  ): Promise<{ answer: string }> {
     if (!this.geminiKey && !this.groqKey) {
       throw new Error('Live AI is not configured.');
     }
 
     try {
-      const systemPrompt = `You are a friendly, expert AI Software Architect Tutor for CipherSchool.
-Current Learning Context: "${contextTitle}"
-${contextSummary ? `Context Summary: ${contextSummary}` : ''}
+      const systemPrompt = `You are an expert, friendly AI Software Architect Tutor for CipherSchool.
+Current Learning Topic: "${contextTitle}"
+${contextSummary ? `Topic Summary: ${contextSummary}` : ''}
 
-CRITICAL RULES:
-1. SIMPLE WORDING: Use plain, natural English.
-2. CRISP & CONCISE: Answer in 2 to 4 short bullet points or brief sentences.
-3. REAL-WORLD ANALOGY: Use a quick 1-sentence analogy where helpful.
-4. CODE: If asked for code, provide minimal 3-6 clean lines.`;
+INTENT-AWARE RESPONSE GUIDELINES:
+1. **GREETINGS & CASUAL HELLOS** (e.g. "hi", "hey", "hello", "good morning"):
+   - Respond naturally and warmly in 1 to 2 short sentences.
+   - Example: "Hey! Ready to master **${contextTitle}**? Ask me anything about how it works, real-world examples, or code patterns!"
+   - NEVER dump a full lecture or unsolicited code on a simple greeting.
+
+2. **CONCEPTUAL EXPLANATIONS & SUMMARIES** (e.g. "summarize this lecture", "explain simply", "what is this", "how does it work"):
+   - Give a rich, high-value learning explanation:
+     * **Core Intuition**: What it is and why it matters in real systems (1-2 crisp sentences).
+     * **Real-World Analogy**: A practical real-world mental model.
+     * **Clean Code Snippet**: A concise 4-8 line Java or TypeScript code snippet in \`\`\`java or \`\`\`typescript with clean comments.
+     * **Architectural Rule of Thumb**: 1 key design principle or pitfall to avoid.
+
+3. **DIRECT & SPECIFIC QUESTIONS** (e.g. "show code", "give analogy", "why use interfaces"):
+   - Directly answer the exact query with high technical depth. Include code blocks with \`\`\`java or \`\`\`typescript whenever explaining code.
+
+4. **OFF-TOPIC QUESTIONS**:
+   - Give a brief 1-sentence answer, then seamlessly guide the conversation back to "${contextTitle}".`;
+
+      const validHistory = history && Array.isArray(history) 
+        ? history.filter((h) => h.role !== 'system' && h.content).map(h => ({
+            role: h.role === 'assistant' ? 'assistant' : 'user',
+            content: h.content
+          }))
+        : [];
 
       const raw = await this.callWithFallback(
         [
           { role: 'system', content: systemPrompt },
+          ...validHistory,
           { role: 'user', content: question }
         ],
         0.3,
-        'askTutor'
+        'askTutor',
+        false
       );
 
       // If json_object was requested or plain text returned
@@ -602,4 +641,71 @@ CRITICAL RULES:
       throw new Error(`AI Tutor failed: ${err.message}`);
     }
   }
+
+  /**
+   * 7. Dynamic Quiz Question Generator for Interactive 10-Question Revision
+   */
+  public static async generateQuizQuestion(
+    contextTitle: string,
+    questionNumber: number,
+    previousQuestions: string[] = []
+  ): Promise<{
+    questionNumber: number;
+    questionText: string;
+    options: { key: string; text: string }[];
+    correctAnswer: string;
+    explanation: string;
+  }> {
+    if (!this.geminiKey && !this.groqKey) {
+      throw new Error('Live AI is not configured.');
+    }
+
+    const topicAspects = [
+      'Core Definition & Intuition',
+      'Real-world Analogy & Purpose',
+      'Code Structure & Implementation rules',
+      'Decoupling & Loose Coupling',
+      'Key Differences from related concepts',
+      'State & Behavior protection',
+      'Common Anti-patterns & Mistakes to avoid',
+      'Extensibility & Open-Closed design',
+      'Practical Edge Cases & Considerations',
+      'Mastery & Architectural Trade-offs'
+    ];
+
+    const aspectFocus = topicAspects[(questionNumber - 1) % topicAspects.length];
+
+    const prompt = `You are creating Question ${questionNumber} of 10 for an interactive architecture revision quiz on "${contextTitle}".
+Aspect focus for this question: "${aspectFocus}".
+${previousQuestions.length > 0 ? `Already covered questions:\n${previousQuestions.map((q) => `- ${q}`).join('\n')}` : ''}
+
+Generate a clear, high-quality, practical multiple choice question with 4 options (A, B, C, D).
+Do NOT use emojis anywhere in your output.
+Return STRICT JSON:
+{
+  "questionNumber": ${questionNumber},
+  "questionText": "Question text here (crisp and professional)",
+  "options": [
+    { "key": "A", "text": "Option A text" },
+    { "key": "B", "text": "Option B text" },
+    { "key": "C", "text": "Option C text" },
+    { "key": "D", "text": "Option D text" }
+  ],
+  "correctAnswer": "A",
+  "explanation": "Professional 1-2 sentence explanation of why this answer is correct."
+}`;
+
+    const raw = await this.callWithFallback(
+      [
+        { role: 'system', content: 'You are an expert interactive Quiz Generator for software design. Output strict JSON.' },
+        { role: 'user', content: prompt }
+      ],
+      0.3,
+      'generateQuiz',
+      true
+    );
+
+    return this.extractJson(raw);
+  }
 }
+
