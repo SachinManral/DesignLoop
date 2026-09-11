@@ -8,21 +8,28 @@ This research note investigates the **learner problem**, analyzes **existing mar
 
 ```mermaid
 quadrantChart
-    title LLD Ecosystem Comparison: Architectural Rigor vs Interactive Evaluation
+    title LLD Tool Positioning Matrix
     x-axis Low Architectural Rigor --> High Architectural Rigor
-    y-axis Static / Generic Feedback --> Interactive Evidence-Grounded Evaluation
-    quadrant-1 "Target (DesignLoop)"
-    quadrant-2 "High Grounding, Low Rigor"
-    quadrant-3 "Low Grounding, Low Rigor"
-    quadrant-4 "High Rigor, Low Feedback"
-    "CodeChef / LeetCode": [0.15, 0.20]
-    "AlgoMaster (Visual Theory)": [0.65, 0.25]
-    "LLDCoding.com (Problem Repo)": [0.70, 0.20]
-    "DesignGurus / Grokking": [0.72, 0.28]
-    "CodeZym (Machine Coding)": [0.60, 0.55]
-    "ChatGPT / Claude (Freeform)": [0.35, 0.40]
-    "DesignLoop": [0.92, 0.94]
+    y-axis Static Output --> Evidence-Grounded Rubric
+    quadrant-1 "Target: Rigor & Evidence"
+    quadrant-2 "Interactive Test Runners"
+    quadrant-3 "Syntax / Generic Chat"
+    quadrant-4 "Static Theory & Walkthroughs"
+    "CodeChef / LeetCode": [0.18, 0.18]
+    "ChatGPT (Freeform)": [0.35, 0.38]
+    "AlgoMaster": [0.65, 0.16]
+    "LLDCoding.com": [0.85, 0.22]
+    "DesignGurus": [0.72, 0.36]
+    "CodeZym": [0.55, 0.62]
+    "DesignLoop": [0.90, 0.90]
 ```
+
+| Quadrant | Focus & Tool Archetype | Representative Platforms |
+| :--- | :--- | :--- |
+| **Q1: Target (High Rigor + Evidence Rubric)** | 7-Step studio, live UML modeling, evidence-grounded rubric, mutation stress-testing | **DesignLoop** |
+| **Q2: Interactive Test Runners (Lower Rigor)** | In-browser IDEs focused on unit tests and code compilation | **CodeZym** |
+| **Q3: Algorithmic / Generic Chat (Low Rigor)** | Competitive programming test cases or unconstrained conversational prompts | **CodeChef, LeetCode, ChatGPT** |
+| **Q4: Static Theory & Repos (High Rigor, No Feedback)** | Visual newsletters, video walkthroughs, and static solution repositories | **AlgoMaster, LLDCoding, DesignGurus** |
 
 ---
 
