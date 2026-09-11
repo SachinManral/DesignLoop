@@ -4,14 +4,18 @@ This document outlines the sprint structure, user stories, acceptance criteria, 
 
 ```mermaid
 flowchart TD
-    subgraph Sprints ["Agile Sprint Lifecycle"]
-        S1["Sprint 1: Architecture, Documentation & Design System<br/>PRD, Syllabus Spec, Theme Tokens, Layout Wireframes"]
+    subgraph Day1 ["Day 1: Foundation & Interactive Studio (Sept 11, 2026)"]
+        S1["Sprint 1: Architecture, Specs & Design System<br/>PRD, Syllabus Spec, Theme Tokens, Layout Wireframes"]
         S2["Sprint 2: Learn Mode Engine & Chapter Reader<br/>15-Module Syllabus, 3-Column Layout, 5-Language Studio, UML Cards, Quizzes"]
         S3["Sprint 3: Practice Studio & Problem Arena<br/>9-Domain Catalog, Problem Briefing, 7-Step Modeler, Mermaid Renderer"]
-        S4["Sprint 4: Dual-AI Evaluation & Quizzes<br/>Groq + Gemini Router, Ask AI Tutor, 8-Dimension Rubric Scorecard, Mutation Defense"]
-        S5["Sprint 5: Analytics, Notes & Telemetry<br/>Chapter Notes, Bookmark System, Rubric Dimension Telemetry, Score Timeline"]
     end
-    S1 --> S2 --> S3 --> S4 --> S5
+
+    subgraph Day2 ["Day 2: AI Orchestration & Telemetry (Sept 12, 2026)"]
+        S4["Sprint 4: Dual-AI Evaluation & Quizzes<br/>Groq + Gemini Router, Ask AI Tutor, 8-Dimension Rubric Scorecard, Mutation Defense"]
+        S5["Sprint 5: Analytics, Routing & Telemetry<br/>Chapter Notes, Bookmark System, Rubric Dimension Telemetry, Score Timeline"]
+    end
+
+    Day1 --> Day2
 ```
 
 ---
