@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+
+# IDE / tool cache
+.21st/
+
+# Build output
+dist/
+dist-ssr/
+
+# Local database (JSON file store — do not commit attempt/submission data)
+server/data/
+
+# Environment variables (API keys — never commit these)
+.env
+.env.local
+.env.*.local
+
+# Vite cache
+.vite/
+*.local
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Lock files (keep package-lock.json, ignore others)
+yarn.lock
+pnpm-lock.yaml
