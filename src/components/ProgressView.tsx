@@ -723,14 +723,21 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ attempts: initialAtt
               </div>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '24px 12px', color: 'var(--text-muted)' }}>
-              <p style={{ fontSize: '0.78rem' }}>Submit a design in the studio to start your score timeline.</p>
+            <div className="progress-empty-state">
+              <div className="progress-empty-icon-wrapper">
+                <BarChart3 size={18} />
+              </div>
+              <p className="progress-empty-title">Ready for your first evaluation</p>
+              <p className="progress-empty-desc">
+                Submit a design in the studio to start tracking your score timeline and architectural growth.
+              </p>
               <button 
-                className="btn-secondary" 
-                style={{ marginTop: '10px', fontSize: '0.74rem' }}
+                className="btn-primary" 
+                style={{ fontSize: '0.76rem', padding: '6px 14px' }}
                 onClick={() => onSelectProblem(problems[0]?.id || 'prob-parking-lot')}
               >
-                Start your first problem
+                <span>Start your first problem</span>
+                <ArrowRight size={13} />
               </button>
             </div>
           )}
@@ -871,8 +878,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ attempts: initialAtt
             })}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
-            <p style={{ fontSize: '0.78rem' }}>No submission records match your filter.</p>
+          <div className="progress-empty-state" style={{ padding: '22px 14px', marginTop: '4px' }}>
+            <FileText size={20} style={{ color: 'var(--text-muted)', marginBottom: '2px' }} />
+            <p className="progress-empty-title" style={{ fontSize: '0.8rem' }}>No submission records found</p>
+            <p className="progress-empty-desc" style={{ fontSize: '0.74rem', marginBottom: 0 }}>
+              Evaluated problem attempts will show up here along with their versions and scores.
+            </p>
           </div>
         )}
       </section>
